@@ -8,20 +8,25 @@ import 'dart:html' as html;  // 網頁相關功能
 import 'dart:collection';  // 集合工具類
 import 'dart:math' show min;  // 數學函數
 import 'package:flutter/gestures.dart';  // 用於手勢識別
+import 'screens/calendar_home_page.dart';
 
 // 應用程序入口
 void main() {
-  runApp(CalendarApp());  // 啟動日曆應用
+  runApp(const MyApp());
 }
 
-// 主應用組件
-class CalendarApp extends StatelessWidget {
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Calendar',  // 應用標題
-      theme: ThemeData(primarySwatch: Colors.blue),  // 主題顏色
-      home: CalendarHomePage(),  // 主頁面
+      title: '營隊月曆',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
+      home: CalendarHomePage(),
     );
   }
 }
