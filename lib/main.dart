@@ -130,6 +130,7 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
           DateTime startDate = DateTime(startParts[0], startParts[1], startParts[2]);
           DateTime endDate = DateTime(endParts[0], endParts[1], endParts[2]);
 
+
           // 為日期範圍內的每一天創建事件
           for (DateTime d = startDate;
               d.isBefore(endDate.add(Duration(days: 1)));
@@ -137,9 +138,12 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
             // 如果該日期還沒有事件列表，創建一個新的空列表
             eventMap.putIfAbsent(d, () => []);
             // 添加事件到對應日期的列表
+
+            // print(data['categories']?.split(',').first);
             eventMap[d]!.add(Event(
               title: data['title'] ?? '',  // 事件標題
               group: data['group'] ?? '',  // 事件組別
+              category: data['categories']?.split(',').first ?? '',  // 事件類別
               data: data,  // 事件詳細數據
             ));
           }

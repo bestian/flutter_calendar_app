@@ -74,6 +74,7 @@ class EventsWidget extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final event = events[index];
                         return Card(
+                          color: event.getCategoryColor(),
                           margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
                           elevation: 1.0,
                           child: InkWell(
