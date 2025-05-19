@@ -291,6 +291,22 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
                       },
                   ),
                   TextSpan(text: '。'),
+                  TextSpan(text: '本站'),
+                  TextSpan(
+                    text: '原始碼',
+                    style: TextStyle(
+                      color: Colors.blue[700],
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        html.window.open(
+                          'https://github.com/bestian/flutter_calendar_app',
+                          '_blank',
+                        );
+                      },
+                  ),
+                  TextSpan(text: '為參考原作，重新設計的版本。'),
                 ],
               ),
             ),
