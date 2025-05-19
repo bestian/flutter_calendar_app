@@ -6,6 +6,7 @@ import 'package:table_calendar/table_calendar.dart';  // 日曆組件
 import 'dart:convert' show latin1, utf8;  // 字符編碼轉換
 import 'dart:html' as html;  // 網頁相關功能
 import 'dart:collection';  // 集合工具類
+import 'dart:math' show min;  // 數學函數
 
 // 應用程序入口
 void main() {
@@ -62,6 +63,8 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
   @override
   void initState() {
     super.initState();
+    _selectedDay = DateTime.now();  // 初始化為當前日期
+    _focusedDay = DateTime.now();   // 確保聚焦日期也是當前日期
     _loadCSV();  // 組件初始化時加載 CSV 數據
   }
 
@@ -95,7 +98,7 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
       }
 
       // 打印 CSV 原始數據（調試用）
-      print(csvString);
+      // print(csvString);
       
       // 使用 csv 包解析 CSV 數據
       final csvTable = const CsvToListConverter(
@@ -228,67 +231,402 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
       // 應用欄
       appBar: AppBar(title: Text('活動月曆')),
       
-      // 主體內容
-      body: Column(
-        children: [
-          // 日曆組件
-          TableCalendar<Event>(
-            firstDay: DateTime.utc(2020, 1, 1),  // 可選的最早日期
-            lastDay: DateTime.utc(2030, 12, 31),  // 可選的最晚日期
-            focusedDay: _focusedDay,  // 當前聚焦的日期
-            calendarFormat: _calendarFormat,  // 日曆視圖格式
-            
-            // 判斷某天是否被選中
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            
-            // 加載某天的事件
-            eventLoader: _getEventsForDay,
-            
-            // 處理日期選擇
-            onDaySelected: (selectedDay, focusedDay) {
-              setState(() {
-                _selectedDay = selectedDay;  // 更新選中日期
-                _focusedDay = focusedDay;    // 更新聚焦日期
-              });
-            },
-            
-            // 處理視圖格式變化
-            onFormatChanged: (format) {
-              setState(() {
-                _calendarFormat = format;  // 更新日曆視圖格式
-              });
-            },
-            
-            // 日曆樣式
-            calendarStyle: CalendarStyle(
-              todayDecoration: BoxDecoration(
-                color: Colors.orange, 
-                shape: BoxShape.circle
-              ),
-              selectedDecoration: BoxDecoration(
-                color: Colors.blue, 
-                shape: BoxShape.circle
-              ),
-            ),
-          ),
+      // 主體內容 - 使用 LayoutBuilder 實現響應式佈局
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // 判斷是否為寬螢幕（寬度大於 800 像素）
+          final isWideScreen = constraints.maxWidth > 800;
           
-          // 間距
-          const SizedBox(height: 8.0),
+          // 如果是寬螢幕，使用橫向排列；否則使用縱向排列
+          final mainAxis = isWideScreen ? Axis.horizontal : Axis.vertical;
           
-          // 事件列表
-          Expanded(
-            child: ListView(
-              // 顯示選中日期的所有事件
-              children: _getEventsForDay(_selectedDay ?? _focusedDay).map((event) {
-                return ListTile(
-                  title: Text(event.title),  // 事件標題
-                  subtitle: Text(event.group),  // 事件組別
-                  onTap: () => _showEventDetail(context, event),  // 點擊顯示詳情
-                );
-              }).toList(),
-            ),
-          ),
-        ],
+          // 寬螢幕維持 Flex，窄螢幕用 Tab 切換日曆/細節
+          if (isWideScreen) {
+            return Flex(
+              direction: mainAxis,
+              clipBehavior: Clip.antiAliasWithSaveLayer,
+              children: [
+                // 日曆組件 - 在寬螢幕上佔用 60% 的寬度，窄螢幕上佔用 100% 的寬度，確保高度夠高
+                Flexible(
+                  flex: 6,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      constraints: const BoxConstraints(), // 寬螢幕不限制高度
+                      
+                      child: Builder(
+                        builder: (tabContext) => TableCalendar<Event>(
+                          firstDay: DateTime.utc(2020, 1, 1),
+                          lastDay: DateTime.utc(2030, 12, 31),
+                          focusedDay: _focusedDay,
+                          calendarFormat: _calendarFormat,
+                          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                          eventLoader: _getEventsForDay,
+                          onDaySelected: (selectedDay, focusedDay) {
+                            setState(() {
+                              _selectedDay = selectedDay;
+                              _focusedDay = focusedDay;
+                            });
+                            final isWideScreen = MediaQuery.of(tabContext).size.width > 800;
+                            if (!isWideScreen && _getEventsForDay(selectedDay).isNotEmpty) {
+                              final tabController = DefaultTabController.of(tabContext);
+                              if (tabController != null) {
+                                tabController.animateTo(1);
+                              }
+                            }
+                          },
+                          onFormatChanged: (format) {
+                            setState(() {
+                              _calendarFormat = format;
+                            });
+                          },
+                          calendarStyle: CalendarStyle(
+                            cellPadding: const EdgeInsets.all(1.0),
+                            todayDecoration: BoxDecoration(
+                              color: Colors.orange,
+                              shape: BoxShape.circle,
+                            ),
+                            selectedDecoration: BoxDecoration(
+                              color: Colors.blue,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          calendarBuilders: CalendarBuilders(
+                            defaultBuilder: (context, day, focusedDay) {
+                              return Container(
+                                margin: const EdgeInsets.all(1.0),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  '${day.day}',
+                                  style: const TextStyle(fontSize: 12.0),
+                                ),
+                              );
+                            },
+                            markerBuilder: (context, date, events) {
+                              if (events.isEmpty) return null;
+                              final displayEvents = events.take(1).toList();
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: displayEvents.map((event) {
+                                  final cleanTitle = event.title.replaceFirst(RegExp(r'^\d+'), '');
+                                  final title = cleanTitle.isEmpty 
+                                      ? event.title.substring(0, min(5, event.title.length))
+                                      : (cleanTitle.length > 5 
+                                          ? '${cleanTitle.substring(0, 5)}...' 
+                                          : cleanTitle);
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 1.0),
+                                    child: Text(
+                                      title,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Theme.of(context).primaryColor,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  );
+                                }).toList(),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // 間距 - 只在寬螢幕時顯示垂直分隔線
+                VerticalDivider(width: 1, thickness: 1, color: Colors.grey[300]),
+                // 事件列表 - 在寬螢幕上佔用 40% 的寬度
+                Flexible(
+                  flex: 4,
+                  child: Container(
+                    child: Card(
+                      margin: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // 顯示選中日期 - 固定在頂部
+                          Container(
+                            padding: const EdgeInsets.all(12.0),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor.withOpacity(0.1),
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Theme.of(context).dividerColor.withOpacity(0.1),
+                                  width: 1.0,
+                                ),
+                              ),
+                            ),
+                            child: Text(
+                              '${_selectedDay?.year}年${_selectedDay?.month}月${_selectedDay?.day}日 的活動',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                          ),
+                          // 事件列表 - 使用 Expanded 確保不會溢出
+                          Expanded(
+                            child: _getEventsForDay(_selectedDay ?? _focusedDay).isEmpty
+                                ? const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(16.0),
+                                      child: Text('當天沒有活動', style: TextStyle(color: Colors.grey)),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                    physics: const BouncingScrollPhysics(),
+                                    itemCount: _getEventsForDay(_selectedDay ?? _focusedDay).length,
+                                    itemBuilder: (context, index) {
+                                      final event = _getEventsForDay(_selectedDay ?? _focusedDay)[index];
+                                      return Card(
+                                        margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                                        elevation: 1.0,
+                                        child: InkWell(
+                                          onTap: () => _showEventDetail(context, event),
+                                          borderRadius: BorderRadius.circular(4.0),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  event.title,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 15.0,
+                                                  ),
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                                if (event.group.isNotEmpty)
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(top: 4.0),
+                                                    child: Text(
+                                                      event.group,
+                                                      style: TextStyle(
+                                                        fontSize: 13.0,
+                                                        color: Theme.of(context).textTheme.bodySmall?.color,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          } else {
+            return DefaultTabController(
+              length: 2,
+              child: Column(
+                children: [
+                  TabBar(
+                    tabs: [
+                      Tab(icon: Icon(Icons.calendar_today), text: '日曆'),
+                      Tab(icon: Icon(Icons.list), text: '活動'),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        // 日曆 Tab
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container(
+                            constraints: const BoxConstraints(maxHeight: 500),
+                            child: Builder(
+                              builder: (tabContext) => TableCalendar<Event>(
+                                firstDay: DateTime.utc(2020, 1, 1),
+                                lastDay: DateTime.utc(2030, 12, 31),
+                                focusedDay: _focusedDay,
+                                calendarFormat: _calendarFormat,
+                                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                                eventLoader: _getEventsForDay,
+                                onDaySelected: (selectedDay, focusedDay) {
+                                  setState(() {
+                                    _selectedDay = selectedDay;
+                                    _focusedDay = focusedDay;
+                                  });
+                                  // 窄螢幕自動切換Tab到活動
+                                  final isWideScreen = MediaQuery.of(tabContext).size.width > 800;
+                                  if (!isWideScreen && _getEventsForDay(selectedDay).isNotEmpty) {
+                                    final tabController = DefaultTabController.of(tabContext);
+                                    if (tabController != null) {
+                                      tabController.animateTo(1);
+                                    }
+                                  }
+                                },
+                                onFormatChanged: (format) {
+                                  setState(() {
+                                    _calendarFormat = format;
+                                  });
+                                },
+                                calendarStyle: CalendarStyle(
+                                  cellPadding: const EdgeInsets.all(1.0),
+                                  todayDecoration: BoxDecoration(
+                                    color: Colors.orange,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  selectedDecoration: BoxDecoration(
+                                    color: Colors.blue,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                calendarBuilders: CalendarBuilders(
+                                  defaultBuilder: (context, day, focusedDay) {
+                                    return Container(
+                                      margin: const EdgeInsets.all(1.0),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        '${day.day}',
+                                        style: const TextStyle(fontSize: 12.0),
+                                      ),
+                                    );
+                                  },
+                                  markerBuilder: (context, date, events) {
+                                    if (events.isEmpty) return null;
+                                    final displayEvents = events.take(1).toList();
+                                    return Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: displayEvents.map((event) {
+                                        final cleanTitle = event.title.replaceFirst(RegExp(r'^\d+'), '');
+                                        final title = cleanTitle.isEmpty 
+                                            ? event.title.substring(0, min(5, event.title.length))
+                                            : (cleanTitle.length > 5 
+                                                ? '${cleanTitle.substring(0, 5)}...' 
+                                                : cleanTitle);
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 1.0),
+                                          child: Text(
+                                            title,
+                                            style: TextStyle(
+                                              fontSize: 9,
+                                              color: Theme.of(context).primaryColor,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        );
+                                      }).toList(),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        // 活動 Tab
+                        Container(
+                          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
+                          child: Card(
+                            margin: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12.0),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: Theme.of(context).dividerColor.withOpacity(0.1),
+                                        width: 1.0,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '${_selectedDay?.year}年${_selectedDay?.month}月${_selectedDay?.day}日 的活動',
+                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).primaryColor,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _getEventsForDay(_selectedDay ?? _focusedDay).isEmpty
+                                      ? const Center(
+                                          child: Padding(
+                                            padding: EdgeInsets.all(16.0),
+                                            child: Text('當天沒有活動', style: TextStyle(color: Colors.grey)),
+                                          ),
+                                        )
+                                      : ListView.builder(
+                                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                          physics: const BouncingScrollPhysics(),
+                                          itemCount: _getEventsForDay(_selectedDay ?? _focusedDay).length,
+                                          itemBuilder: (context, index) {
+                                            final event = _getEventsForDay(_selectedDay ?? _focusedDay)[index];
+                                            return Card(
+                                              margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                                              elevation: 1.0,
+                                              child: InkWell(
+                                                onTap: () => _showEventDetail(context, event),
+                                                borderRadius: BorderRadius.circular(4.0),
+                                                child: Padding(
+                                                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        event.title,
+                                                        style: const TextStyle(
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 15.0,
+                                                        ),
+                                                        maxLines: 2,
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                      if (event.group.isNotEmpty)
+                                                        Padding(
+                                                          padding: const EdgeInsets.only(top: 4.0),
+                                                          child: Text(
+                                                            event.group,
+                                                            style: TextStyle(
+                                                              fontSize: 13.0,
+                                                              color: Theme.of(context).textTheme.bodySmall?.color,
+                                                            ),
+                                                            maxLines: 1,
+                                                            overflow: TextOverflow.ellipsis,
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+        },
       ),
     );
   }
