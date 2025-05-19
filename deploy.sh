@@ -14,13 +14,19 @@ flutter build web --base-href "$BASE_HREF"
 # 2. 將 build/web 推送到 gh-pages 分支
 cd build/web
 
-# 強制推送到 gh-pages 分支
-git init
-git checkout -b gh-pages
+# 初始化 Git 倉庫（如果不存在）
+if [ ! -d .git ]; then
+  git init
+fi
+
+# 添加所有文件
 git add .
-git commit -m "deploy to gh-pages"
-# 使用 --force 強制覆蓋遠端分支
-git push --force $(git -C ../.. remote get-url origin) gh-pages
+
+# 提交更改
+git commit -m "deploy to gh-pages" || true  # 如果沒有變更，繼續執行
+
+# 使用 --force 強制推送到 gh-pages 分支
+git push --force $(git -C ../.. remote get-url origin) HEAD:gh-pages
 
 cd ../..
 
