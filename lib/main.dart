@@ -230,7 +230,7 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       // 應用欄
-      appBar: AppBar(title: Text('活動月曆')),
+      appBar: AppBar(title: Text('營隊月曆')),
       
       // 主體內容
       body: Column(
@@ -243,7 +243,7 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
               text: TextSpan(
                 style: TextStyle(color: Colors.black87, fontSize: 14, height: 1.5),
                 children: [
-                  TextSpan(text: '💪 請大家一起提供優質營隊資訊，直接'),
+                  TextSpan(text: '💪 優質營隊資訊，直接'),
                   TextSpan(
                     text: '編輯表單',
                     style: TextStyle(
@@ -258,8 +258,8 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
                         );
                       },
                   ),
-                  TextSpan(text: '，結果就會馬上呈現在月曆上。\n'),
-                  TextSpan(text: '🦾 用自己AI服務帳號更方便快速填寫: '),
+                  TextSpan(text: '，會呈現在月曆。\n'),
+                  TextSpan(text: '🦾 用AI服務更方便填寫: '),
                   TextSpan(
                     text: '說明文件',
                     style: TextStyle(
@@ -291,6 +291,7 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
                       },
                   ),
                   TextSpan(text: '。'),
+                  TextSpan(text: '\n'),
                   TextSpan(text: '本站'),
                   TextSpan(
                     text: '原始碼',
