@@ -7,6 +7,7 @@ import 'dart:convert' show latin1, utf8;  // 字符編碼轉換
 import 'dart:html' as html;  // 網頁相關功能
 import 'dart:collection';  // 集合工具類
 import 'dart:math' show min;  // 數學函數
+import 'package:flutter/gestures.dart';  // 用於手勢識別
 
 // 應用程序入口
 void main() {
@@ -231,9 +232,73 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
       // 應用欄
       appBar: AppBar(title: Text('活動月曆')),
       
-      // 主體內容 - 使用 LayoutBuilder 實現響應式佈局
-      body: LayoutBuilder(
-        builder: (context, constraints) {
+      // 主體內容
+      body: Column(
+        children: [
+          // 頂部橫幅
+          Container(
+            padding: EdgeInsets.all(12),
+            color: Colors.blue[50],
+            child: RichText(
+              text: TextSpan(
+                style: TextStyle(color: Colors.black87, fontSize: 14, height: 1.5),
+                children: [
+                  TextSpan(text: '💪 請大家一起提供優質營隊資訊，直接'),
+                  TextSpan(
+                    text: '編輯表單',
+                    style: TextStyle(
+                      color: Colors.blue[700],
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        html.window.open(
+                          'https://docs.google.com/spreadsheets/d/1AdMAE1buc3jZbdBgMyKzv0oND3qfW-my_yZAOgrG1hk/edit?hl=zh-tw&gid=1419688078#gid=1419688078',
+                          '_blank',
+                        );
+                      },
+                  ),
+                  TextSpan(text: '，結果就會馬上呈現在月曆上。\n'),
+                  TextSpan(text: '🦾 用自己AI服務帳號更方便快速填寫: '),
+                  TextSpan(
+                    text: '說明文件',
+                    style: TextStyle(
+                      color: Colors.blue[700],
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        html.window.open(
+                          'https://hackmd.io/@moogoo/Hk2en_oxee',
+                          '_blank',
+                        );
+                      },
+                  ),
+                  TextSpan(text: '。\n'),
+                  TextSpan(text: '感謝'),
+                  TextSpan(
+                    text: 'moogoo原作的"父母救星 - 營隊月曆"',
+                    style: TextStyle(
+                      color: Colors.blue[700],
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        html.window.open(
+                          'https://moogoo78.github.io/summer-cal/',
+                          '_blank',
+                        );
+                      },
+                  ),
+                  TextSpan(text: '。'),
+                ],
+              ),
+            ),
+          ),
+          // 主要內容
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
           // 判斷是否為寬螢幕（寬度大於 800 像素）
           final isWideScreen = constraints.maxWidth > 800;
           
@@ -626,7 +691,10 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
               ),
             );
           }
-        },
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
