@@ -14,8 +14,12 @@ flutter build web --base-href "$BASE_HREF"
 # 2. 將 build/web 推送到 gh-pages 分支
 cd build/web
 
-git init
+# 如果 .git 目錄已存在，先刪除
+if [ -d .git ]; then
+  rm -rf .git
+fi
 
+git init
 git remote add origin $(git -C ../.. remote get-url origin)
 git checkout -b gh-pages
 
