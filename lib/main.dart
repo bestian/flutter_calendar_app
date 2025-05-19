@@ -1,11 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:csv/csv.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'dart:convert';
+import 'dart:convert' show latin1, utf8;
+import 'dart:html' as html;
 import 'dart:collection';
-import 'dart:convert' show latin1;
 
 void main() {
   runApp(CalendarApp());
@@ -155,8 +154,11 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4.0),
                     child: InkWell(
-                      child: Text(value, style: TextStyle(color: Colors.blue)),
-                      onTap: () => Navigator.of(context).pop(),
+                      child: Text('連結：' + value, style: TextStyle(color: Colors.blue)),
+                      onTap: () {
+                        html.window.open(value, '_blank');
+                        Navigator.of(context).pop();
+                      },
                     ),
                   );
                 }
