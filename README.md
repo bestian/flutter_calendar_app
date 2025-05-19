@@ -13,7 +13,7 @@ A new Flutter project.
    flutter run -d chrome
    ```
 3. 等待編譯完成後，Chrome 瀏覽器會自動開啟應用程式
-4. 開發時修改程式碼會自動熱重載（Hot Reload）
+4. 開發時修改程式碼後，在終端機按「r」會自動熱重載（Hot Reload）
 
 ### 部署
 1. 確保已安裝 Flutter 開發環境
