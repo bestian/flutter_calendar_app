@@ -1,4 +1,5 @@
 // 導入必要的 Flutter 和 Dart 庫
+import 'models/event.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;  // 用於發送 HTTP 請求
 import 'package:csv/csv.dart';  // 用於解析 CSV 數據
@@ -8,7 +9,9 @@ import 'dart:html' as html;  // 網頁相關功能
 import 'dart:collection';  // 集合工具類
 import 'dart:math' show min;  // 數學函數
 import 'package:flutter/gestures.dart';  // 用於手勢識別
-import 'screens/calendar_home_page.dart';
+import 'widgets/events_widget.dart';
+import 'widgets/banner_widget.dart';
+import 'widgets/calendar_widget.dart';
 
 // 應用程序入口
 void main() {
@@ -29,18 +32,6 @@ class MyApp extends StatelessWidget {
       home: CalendarHomePage(),
     );
   }
-}
-
-// 事件數據模型
-class Event {
-  final String title;  // 事件標題
-  final String group;  // 事件所屬組別
-  final Map<String, String> data;  // 事件詳細數據
-
-  Event({required this.title, required this.group, required this.data});
-
-  @override
-  String toString() => '$group::$title';  // 重寫 toString 方法，用於調試
 }
 
 // 日曆主頁面（有狀態組件）
@@ -241,82 +232,7 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
       body: Column(
         children: [
           // 頂部橫幅
-          Container(
-            padding: EdgeInsets.all(12),
-            color: Colors.blue[50],
-            child: RichText(
-              text: TextSpan(
-                style: TextStyle(color: Colors.black87, fontSize: 14, height: 1.5),
-                children: [
-                  TextSpan(text: '💪 優質營隊資訊，直接'),
-                  TextSpan(
-                    text: '編輯表單',
-                    style: TextStyle(
-                      color: Colors.blue[700],
-                      decoration: TextDecoration.underline,
-                    ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        html.window.open(
-                          'https://docs.google.com/spreadsheets/d/1AdMAE1buc3jZbdBgMyKzv0oND3qfW-my_yZAOgrG1hk/edit?hl=zh-tw&gid=1419688078#gid=1419688078',
-                          '_blank',
-                        );
-                      },
-                  ),
-                  TextSpan(text: '，會呈現在月曆。\n'),
-                  TextSpan(text: '🦾 用AI服務更方便填寫: '),
-                  TextSpan(
-                    text: '說明文件',
-                    style: TextStyle(
-                      color: Colors.blue[700],
-                      decoration: TextDecoration.underline,
-                    ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        html.window.open(
-                          'https://hackmd.io/@moogoo/Hk2en_oxee',
-                          '_blank',
-                        );
-                      },
-                  ),
-                  TextSpan(text: '。\n'),
-                  TextSpan(text: '感謝'),
-                  TextSpan(
-                    text: 'moogoo原作的"父母救星 - 營隊月曆"',
-                    style: TextStyle(
-                      color: Colors.blue[700],
-                      decoration: TextDecoration.underline,
-                    ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        html.window.open(
-                          'https://moogoo78.github.io/summer-cal/',
-                          '_blank',
-                        );
-                      },
-                  ),
-                  TextSpan(text: '。'),
-                  TextSpan(text: '\n'),
-                  TextSpan(text: '本站'),
-                  TextSpan(
-                    text: '原始碼',
-                    style: TextStyle(
-                      color: Colors.blue[700],
-                      decoration: TextDecoration.underline,
-                    ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        html.window.open(
-                          'https://github.com/bestian/flutter_calendar_app',
-                          '_blank',
-                        );
-                      },
-                  ),
-                  TextSpan(text: '為參考原作，重新設計的版本。'),
-                ],
-              ),
-            ),
-          ),
+          BannerWidget(),
           // 主要內容
           Expanded(
             child: LayoutBuilder(
@@ -429,91 +345,12 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
                 // 事件列表 - 在寬螢幕上佔用 40% 的寬度
                 Flexible(
                   flex: 4,
-                  child: Container(
-                    child: Card(
-                      margin: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // 顯示選中日期 - 固定在頂部
-                          Container(
-                            padding: const EdgeInsets.all(12.0),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor.withOpacity(0.1),
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: Theme.of(context).dividerColor.withOpacity(0.1),
-                                  width: 1.0,
-                                ),
-                              ),
-                            ),
-                            child: Text(
-                              '${_selectedDay?.year}年${_selectedDay?.month}月${_selectedDay?.day}日 的活動',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).primaryColor,
-                              ),
-                            ),
-                          ),
-                          // 事件列表 - 使用 Expanded 確保不會溢出
-                          Expanded(
-                            child: _getEventsForDay(_selectedDay ?? _focusedDay).isEmpty
-                                ? const Center(
-                                    child: Padding(
-                                      padding: EdgeInsets.all(16.0),
-                                      child: Text('當天沒有活動', style: TextStyle(color: Colors.grey)),
-                                    ),
-                                  )
-                                : ListView.builder(
-                                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                    physics: const BouncingScrollPhysics(),
-                                    itemCount: _getEventsForDay(_selectedDay ?? _focusedDay).length,
-                                    itemBuilder: (context, index) {
-                                      final event = _getEventsForDay(_selectedDay ?? _focusedDay)[index];
-                                      return Card(
-                                        margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                                        elevation: 1.0,
-                                        child: InkWell(
-                                          onTap: () => _showEventDetail(context, event),
-                                          borderRadius: BorderRadius.circular(4.0),
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  event.title,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 15.0,
-                                                  ),
-                                                  maxLines: 2,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                                if (event.group.isNotEmpty)
-                                                  Padding(
-                                                    padding: const EdgeInsets.only(top: 4.0),
-                                                    child: Text(
-                                                      event.group,
-                                                      style: TextStyle(
-                                                        fontSize: 13.0,
-                                                        color: Theme.of(context).textTheme.bodySmall?.color,
-                                                      ),
-                                                      maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: EventsWidget(
+                    selectedDay: _selectedDay ?? _focusedDay,
+                    events: _getEventsForDay(_selectedDay ?? _focusedDay),
+                    isWideScreen: isWideScreen,
+                    fields: _fields,
+                    labels: _labels,
                   ),
                 ),
               ],
@@ -621,90 +458,12 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
                           ),
                         ),
                         // 活動 Tab
-                        Container(
-                          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
-                          child: Card(
-                            margin: const EdgeInsets.all(8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(12.0),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).primaryColor.withOpacity(0.1),
-                                    border: Border(
-                                      bottom: BorderSide(
-                                        color: Theme.of(context).dividerColor.withOpacity(0.1),
-                                        width: 1.0,
-                                      ),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    '${_selectedDay?.year}年${_selectedDay?.month}月${_selectedDay?.day}日 的活動',
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).primaryColor,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: _getEventsForDay(_selectedDay ?? _focusedDay).isEmpty
-                                      ? const Center(
-                                          child: Padding(
-                                            padding: EdgeInsets.all(16.0),
-                                            child: Text('當天沒有活動', style: TextStyle(color: Colors.grey)),
-                                          ),
-                                        )
-                                      : ListView.builder(
-                                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                          physics: const BouncingScrollPhysics(),
-                                          itemCount: _getEventsForDay(_selectedDay ?? _focusedDay).length,
-                                          itemBuilder: (context, index) {
-                                            final event = _getEventsForDay(_selectedDay ?? _focusedDay)[index];
-                                            return Card(
-                                              margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                                              elevation: 1.0,
-                                              child: InkWell(
-                                                onTap: () => _showEventDetail(context, event),
-                                                borderRadius: BorderRadius.circular(4.0),
-                                                child: Padding(
-                                                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                                                  child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      Text(
-                                                        event.title,
-                                                        style: const TextStyle(
-                                                          fontWeight: FontWeight.bold,
-                                                          fontSize: 15.0,
-                                                        ),
-                                                        maxLines: 2,
-                                                        overflow: TextOverflow.ellipsis,
-                                                      ),
-                                                      if (event.group.isNotEmpty)
-                                                        Padding(
-                                                          padding: const EdgeInsets.only(top: 4.0),
-                                                          child: Text(
-                                                            event.group,
-                                                            style: TextStyle(
-                                                              fontSize: 13.0,
-                                                              color: Theme.of(context).textTheme.bodySmall?.color,
-                                                            ),
-                                                            maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
-                                                          ),
-                                                        ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        EventsWidget(
+                          selectedDay: _selectedDay ?? _focusedDay,
+                          events: _getEventsForDay(_selectedDay ?? _focusedDay),
+                          isWideScreen: false,
+                          fields: _fields,
+                          labels: _labels,
                         ),
                       ],
                     ),
