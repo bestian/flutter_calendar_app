@@ -68499,7 +68499,7 @@ p=A.dX(j,j,j,"\u611f\u8b1d")
 o=A.fj(j,j,B.cM,j,B.cs,j,j,j,j,j,j,j,j,j,j,j,j,!0,j,j,j,j,j,j,j,j)
 n=A.Hk(j,j)
 n.aX=new A.Ra()
-o=A.dX(j,n,o,'moogoo\u539f\u4f5c\u7684"\u7236\u6bcd\u6551\u661f - \u71df\u968a\u6708\u66c6"')
+o=A.dX(j,n,o,'moogoo\u539f\u4f5c\u7684"\u5927\u71df\u5bb6 - \u71df\u968a\u6708\u66c6"')
 n=A.dX(j,j,j,"\u3002\n")
 m=A.dX(j,j,j,"\u672c\u7ad9")
 l=A.fj(j,j,B.cM,j,B.cs,j,j,j,j,j,j,j,j,j,j,j,j,!0,j,j,j,j,j,j,j,j)
@@ -68519,7 +68519,7 @@ $S:0}
 A.Ra.prototype={
 $0(){var s=window
 s.toString
-B.dD.pZ(s,"https://moogoo78.github.io/summer-cal/","_blank")},
+B.dD.pZ(s,"https://dayingja.cc/","_blank")},
 $S:0}
 A.Rb.prototype={
 $0(){var s=window
