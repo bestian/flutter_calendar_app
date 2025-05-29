@@ -46,7 +46,7 @@ class BannerWidget extends StatelessWidget {
             TextSpan(text: '。\n'),
             TextSpan(text: '感謝'),
             TextSpan(
-              text: 'moogoo原作的"父母救星 - 營隊月曆"',
+              text: 'moogoo原作的"大營家 - 營隊月曆"',
               style: TextStyle(
                 color: Colors.blue[700],
                 decoration: TextDecoration.underline,
@@ -54,7 +54,7 @@ class BannerWidget extends StatelessWidget {
               recognizer: TapGestureRecognizer()
                 ..onTap = () {
                   html.window.open(
-                    'https://moogoo78.github.io/summer-cal/',
+                    'https://dayingja.cc/', //'https://moogoo78.github.io/summer-cal/',
                     '_blank',
                   );
                 },
