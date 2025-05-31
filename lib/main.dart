@@ -126,37 +126,80 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
           final startParts = data['start']!.split('-').map(int.parse).toList();
           final endParts = data['end']!.split('-').map(int.parse).toList();
           
-          // 創建日期對象
+          // 創建日期對象，並標準化為當天開始時間
           DateTime startDate = DateTime(startParts[0], startParts[1], startParts[2]);
           DateTime endDate = DateTime(endParts[0], endParts[1], endParts[2]);
 
+          // 調試日誌：打印事件信息
+          print('處理事件: ${data['title']}');
+          print('開始日期: $startDate');
+          print('結束日期: $endDate');
 
-          // 為日期範圍內的每一天創建事件
-          for (DateTime d = startDate;
-              d.isBefore(endDate.add(Duration(days: 1)));
-              d = d.add(Duration(days: 1))) {
-            // 如果該日期還沒有事件列表，創建一個新的空列表
-            eventMap.putIfAbsent(d, () => []);
-            // 添加事件到對應日期的列表
-
-            // print(data['categories']?.split(',').first);
-            eventMap[d]!.add(Event(
-              title: data['title'] ?? '',  // 事件標題
-              group: data['group'] ?? '',  // 事件組別
-              category: data['categories']?.split(',').first ?? '',  // 事件類別
-              data: data,  // 事件詳細數據
-            ));
+          // 檢查日期是否有效
+          if (startDate.isAfter(endDate)) {
+            print('警告：開始日期晚於結束日期，跳過此事件');
+            continue;
           }
-        } catch (_) {
+
+          // 檢查日期範圍是否合理（不超過一年）
+          if (endDate.difference(startDate).inDays > 365) {
+            print('警告：事件持續時間超過一年，跳過此事件');
+            continue;
+          }
+
+          // 使用更安全的方式處理日期範圍
+          DateTime currentDate = startDate;
+          int count = 0;
+          const maxDays = 366; // 最大允許天數（包含閏年）
+
+          while (currentDate.isBefore(endDate.add(const Duration(days: 1))) && count < maxDays) {
+            // 創建標準化的日期（只保留年月日）
+            final normalizedDate = DateTime(currentDate.year, currentDate.month, currentDate.day);
+            print('添加事件到日期: $normalizedDate (第 ${count + 1} 天)');
+
+            // 如果該日期還沒有事件列表，創建一個新的空列表
+            eventMap.putIfAbsent(normalizedDate, () => []);
+            
+            // 添加事件到對應日期的列表
+            eventMap[normalizedDate]!.add(Event(
+              title: data['title'] ?? '',
+              group: data['group'] ?? '',
+              category: data['categories']?.split(',').first ?? '',
+              data: data,
+            ));
+
+            // 移動到下一天
+            currentDate = currentDate.add(const Duration(days: 1));
+            count++;
+
+            // 安全檢查：如果超過最大天數，強制退出
+            if (count >= maxDays) {
+              print('警告：達到最大天數限制，停止添加事件');
+              break;
+            }
+          }
+
+          print('事件 ${data['title']} 添加完成，共添加 $count 天');
+        } catch (e) {
+          // 打印錯誤信息
+          print('處理事件時出錯: ${data['title']}');
+          print('錯誤詳情: $e');
           // 跳過無效的日期格式
+          continue;
         }
       }
 
+      // 調試日誌：打印最終的事件映射
+      print('最終事件映射:');
+      eventMap.forEach((date, events) {
+        print('日期 $date: ${events.map((e) => e.title).join(', ')}');
+      });
+
       // 更新狀態，觸發 UI 重新構建
       setState(() {
-        _events = eventMap;  // 更新事件數據
-        _fields = fields;   // 更新字段名
-        _labels = labels;   // 更新顯示標籤
+        _events = eventMap;
+        _fields = fields;
+        _labels = labels;
       });
     } catch (e) {
       // 處理加載錯誤
