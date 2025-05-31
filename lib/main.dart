@@ -12,6 +12,7 @@ import 'package:flutter/gestures.dart';  // 用於手勢識別
 import 'widgets/events_widget.dart';
 import 'widgets/banner_widget.dart';
 import 'widgets/calendar_widget.dart';
+import 'widgets/search_widget.dart';
 
 // 應用程序入口
 void main() {
@@ -216,6 +217,24 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
     return _events[DateTime(day.year, day.month, day.day)] ?? [];
   }
 
+  // 獲取所有事件
+  List<Event> get _allEvents {
+    return _events.values.expand((events) => events).toList();
+  }
+
+  // 處理搜尋結果選擇
+  void _handleSearchResultSelected(Event event) {
+    // 找到事件的第一個日期
+    final eventDate = _events.entries
+        .firstWhere((entry) => entry.value.contains(event))
+        .key;
+    
+    setState(() {
+      _selectedDay = eventDate;
+      _focusedDay = eventDate;
+    });
+  }
+
   // 顯示事件詳情對話框
   void _showEventDetail(BuildContext context, Event event) {
     showDialog(
@@ -272,9 +291,68 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 應用欄
-      appBar: AppBar(title: Text('營隊月曆')),
-      
+      appBar: AppBar(
+        title: const Text('營隊月曆'),
+        backgroundColor: Colors.blue,  // 添加背景色
+        foregroundColor: Colors.white,  // 添加前景色
+        actions: [
+          // 搜尋按鈕
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.search, size: 28),  // 加大圖示
+              tooltip: '搜尋活動',  // 添加提示文字
+              onPressed: () {
+                print('搜尋按鈕被點擊');  // 添加調試日誌
+                showDialog(
+                  context: context,
+                  barrierDismissible: true,  // 允許點擊外部關閉
+                  builder: (context) => Dialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    child: Container(
+                      width: MediaQuery.of(context).size.width * 0.9,
+                      height: MediaQuery.of(context).size.height * 0.8,
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                '搜尋活動',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close, size: 28),
+                                onPressed: () => Navigator.of(context).pop(),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 24),
+                          Expanded(
+                            child: SearchWidget(
+                              allEvents: _allEvents,
+                              onEventSelected: (event) {
+                                Navigator.of(context).pop();
+                                _handleSearchResultSelected(event);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
       // 主體內容
       body: Column(
         children: [
