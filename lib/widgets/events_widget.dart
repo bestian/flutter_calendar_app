@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/event.dart';
-import 'event_detail_dialog.dart';
+import 'event_detail_page.dart';
 
 class EventsWidget extends StatelessWidget {
   final DateTime selectedDay;
@@ -21,12 +21,20 @@ class EventsWidget extends StatelessWidget {
   }) : super(key: key);
 
   void _showEventDetail(BuildContext context, Event event) {
-    showDialog(
-      context: context,
-      builder: (context) => EventDetailDialog(
-        event: event,
-        fields: fields,
-        labels: labels,
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 600),
+        pageBuilder: (context, animation, secondaryAnimation) => EventDetailPage(
+          event: event,
+          fields: fields,
+          labels: labels,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
       ),
     );
   }
@@ -98,7 +106,7 @@ class EventsWidget extends StatelessWidget {
                                     child: Image.asset(
                                       'lib/img/hero.png',
                                       width: 36,
-                                      height: 36,
+                                      height: 36
                                     ),
                                   ),
                                   const SizedBox(width: 12),
