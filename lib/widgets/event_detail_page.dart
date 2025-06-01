@@ -6,12 +6,14 @@ class EventDetailPage extends StatelessWidget {
   final Event event;
   final List<String> fields;
   final List<String> labels;
+  final String heroTag;
 
   const EventDetailPage({
     Key? key,
     required this.event,
     required this.fields,
     required this.labels,
+    required this.heroTag,
   }) : super(key: key);
 
   @override
@@ -27,7 +29,7 @@ class EventDetailPage extends StatelessWidget {
           children: [
             Center(
               child: Hero(
-                tag: '${event.title}_${event.group}',
+                tag: heroTag,
                 child: Image.asset(
                   'lib/img/hero.png',
                   width: 80,

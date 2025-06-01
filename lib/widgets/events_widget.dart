@@ -20,7 +20,7 @@ class EventsWidget extends StatelessWidget {
     this.focusedEvent,
   }) : super(key: key);
 
-  void _showEventDetail(BuildContext context, Event event) {
+  void _showEventDetail(BuildContext context, Event event, int index) {
     Navigator.of(context).push(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 600),
@@ -28,6 +28,7 @@ class EventsWidget extends StatelessWidget {
           event: event,
           fields: fields,
           labels: labels,
+          heroTag: '${event.title}_${event.group}_$index',
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
@@ -94,7 +95,7 @@ class EventsWidget extends StatelessWidget {
                                 : BorderSide.none,
                           ),
                           child: InkWell(
-                            onTap: () => _showEventDetail(context, event),
+                            onTap: () => _showEventDetail(context, event, index),
                             borderRadius: BorderRadius.circular(4.0),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
@@ -102,7 +103,7 @@ class EventsWidget extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Hero(
-                                    tag: '${event.title}_${event.group}',
+                                    tag: '${event.title}_${event.group}_$index',
                                     child: Image.asset(
                                       'lib/img/hero.png',
                                       width: 36,
