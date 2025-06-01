@@ -37,6 +37,15 @@ class EventDetailDialog extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Hero(
+                    tag: '${event.title}_${event.group}',
+                    child: Image.asset(
+                      'lib/img/hero.png',
+                      width: 64,
+                      height: 64,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Text(
                     event.title,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(

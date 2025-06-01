@@ -90,31 +90,47 @@ class EventsWidget extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4.0),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                              child: Column(
+                              child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    event.title,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15.0,
+                                  Hero(
+                                    tag: '${event.title}_${event.group}',
+                                    child: Image.asset(
+                                      'lib/img/hero.png',
+                                      width: 36,
+                                      height: 36,
                                     ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  if (event.group.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4.0),
-                                      child: Text(
-                                        event.group,
-                                        style: TextStyle(
-                                          fontSize: 13.0,
-                                          color: Theme.of(context).textTheme.bodySmall?.color,
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          event.title,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15.0,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                                        if (event.group.isNotEmpty)
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 4.0),
+                                            child: Text(
+                                              event.group,
+                                              style: TextStyle(
+                                                fontSize: 13.0,
+                                                color: Theme.of(context).textTheme.bodySmall?.color,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                      ],
                                     ),
+                                  ),
                                 ],
                               ),
                             ),
