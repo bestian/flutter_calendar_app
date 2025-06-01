@@ -8,6 +8,7 @@ class EventsWidget extends StatelessWidget {
   final List<String> fields;
   final List<String> labels;
   final bool isWideScreen;
+  final Event? focusedEvent;
 
   const EventsWidget({
     Key? key,
@@ -16,6 +17,7 @@ class EventsWidget extends StatelessWidget {
     required this.fields,
     required this.labels,
     required this.isWideScreen,
+    this.focusedEvent,
   }) : super(key: key);
 
   void _showEventDetail(BuildContext context, Event event) {
@@ -77,6 +79,12 @@ class EventsWidget extends StatelessWidget {
                           color: event.getCategoryColor(),
                           margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
                           elevation: 1.0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4.0),
+                            side: event == focusedEvent
+                                ? BorderSide(color: Theme.of(context).primaryColor, width: 4.0)
+                                : BorderSide.none,
+                          ),
                           child: InkWell(
                             onTap: () => _showEventDetail(context, event),
                             borderRadius: BorderRadius.circular(4.0),

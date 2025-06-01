@@ -78,7 +78,7 @@ class EventDetailDialog extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 4.0),
-                              if (fields[i] == 'url' && event.data[fields[i]]!.isNotEmpty)
+                              if ((fields[i] == 'url' || fields[i] == 'source') && event.data[fields[i]]!.isNotEmpty)
                                 InkWell(
                                   onTap: () {
                                     html.window.open(event.data[fields[i]]!, '_blank');

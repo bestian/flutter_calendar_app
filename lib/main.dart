@@ -11,12 +11,11 @@ import 'dart:math' show min;  // 數學函數
 import 'package:flutter/gestures.dart';  // 用於手勢識別
 import 'widgets/events_widget.dart';
 import 'widgets/banner_widget.dart';
-import 'widgets/calendar_widget.dart';
 import 'widgets/search_widget.dart';
 
 // 應用程序入口
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -42,7 +41,11 @@ class CalendarHomePage extends StatefulWidget {
 }
 
 // 日曆主頁面的狀態類
-class _CalendarHomePageState extends State<CalendarHomePage> {
+class _CalendarHomePageState extends State<CalendarHomePage> with SingleTickerProviderStateMixin {
+  // 添加 TabController
+  late TabController _tabController;
+  Event? _focusedEvent;  // 添加這行
+
   // Google Sheets 數據源 URL
   final String sourceUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS-ZZ5igNAgYF2aDKkvNqmY1ia5yv2RMDymvD3qvAJzzVPU5oVoFepzDHva8y6BJWPlkrbrJNKmPlK8/pub?gid=1419688078&single=true&output=csv';
   
@@ -61,9 +64,16 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
   @override
   void initState() {
     super.initState();
-    _selectedDay = DateTime.now();  // 初始化為當前日期
-    _focusedDay = DateTime.now();   // 確保聚焦日期也是當前日期
-    _loadCSV();  // 組件初始化時加載 CSV 數據
+    _tabController = TabController(length: 2, vsync: this);
+    _selectedDay = DateTime.now();
+    _focusedDay = DateTime.now();
+    _loadCSV();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   // 從遠程加載 CSV 數據
@@ -228,10 +238,22 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
     final eventDate = _events.entries
         .firstWhere((entry) => entry.value.contains(event))
         .key;
+    print('eventDate: $eventDate');
     
     setState(() {
       _selectedDay = eventDate;
       _focusedDay = eventDate;
+      _focusedEvent = event;
+    });
+
+    // 使用 Future.microtask 確保在 setState 之後執行
+    Future.microtask(() {
+      final isWideScreen = MediaQuery.of(context).size.width > 800;
+      print('isWideScreen: $isWideScreen');
+      
+      if (!isWideScreen) {
+        _tabController.animateTo(1);
+      }
     });
   }
 
@@ -397,10 +419,7 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
                             });
                             final isWideScreen = MediaQuery.of(tabContext).size.width > 800;
                             if (!isWideScreen && _getEventsForDay(selectedDay).isNotEmpty) {
-                              final tabController = DefaultTabController.of(tabContext);
-                              if (tabController != null) {
-                                tabController.animateTo(1);
-                              }
+                              _tabController.animateTo(1);
                             }
                           },
                           onFormatChanged: (format) {
@@ -476,125 +495,122 @@ class _CalendarHomePageState extends State<CalendarHomePage> {
                     isWideScreen: isWideScreen,
                     fields: _fields,
                     labels: _labels,
+                    focusedEvent: _focusedEvent,
                   ),
                 ),
               ],
             );
           } else {
-            return DefaultTabController(
-              length: 2,
-              child: Column(
-                children: [
-                  TabBar(
-                    tabs: [
-                      Tab(icon: Icon(Icons.calendar_today), text: '日曆'),
-                      Tab(icon: Icon(Icons.list), text: '活動'),
-                    ],
-                  ),
-                  Expanded(
-                    child: TabBarView(
-                      children: [
-                        // 日曆 Tab
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Container(
-                            constraints: const BoxConstraints(maxHeight: 500),
-                            child: Builder(
-                              builder: (tabContext) => TableCalendar<Event>(
-                                firstDay: DateTime.utc(2020, 1, 1),
-                                lastDay: DateTime.utc(2030, 12, 31),
-                                focusedDay: _focusedDay,
-                                calendarFormat: _calendarFormat,
-                                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                                eventLoader: _getEventsForDay,
-                                onDaySelected: (selectedDay, focusedDay) {
-                                  setState(() {
-                                    _selectedDay = selectedDay;
-                                    _focusedDay = focusedDay;
-                                  });
-                                  // 窄螢幕自動切換Tab到活動
-                                  final isWideScreen = MediaQuery.of(tabContext).size.width > 800;
-                                  if (!isWideScreen && _getEventsForDay(selectedDay).isNotEmpty) {
-                                    final tabController = DefaultTabController.of(tabContext);
-                                    if (tabController != null) {
-                                      tabController.animateTo(1);
-                                    }
-                                  }
-                                },
-                                onFormatChanged: (format) {
-                                  setState(() {
-                                    _calendarFormat = format;
-                                  });
-                                },
-                                calendarStyle: CalendarStyle(
-                                  cellPadding: const EdgeInsets.all(1.0),
-                                  todayDecoration: BoxDecoration(
-                                    color: Colors.orange,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  selectedDecoration: BoxDecoration(
-                                    color: Colors.blue,
-                                    shape: BoxShape.circle,
-                                  ),
+            return Column(
+              children: [
+                TabBar(
+                  controller: _tabController,
+                  tabs: [
+                    Tab(icon: Icon(Icons.calendar_today), text: '日曆'),
+                    Tab(icon: Icon(Icons.list), text: '活動'),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      // 日曆 Tab
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container(
+                          constraints: const BoxConstraints(maxHeight: 500),
+                          child: Builder(
+                            builder: (tabContext) => TableCalendar<Event>(
+                              firstDay: DateTime.utc(2020, 1, 1),
+                              lastDay: DateTime.utc(2030, 12, 31),
+                              focusedDay: _focusedDay,
+                              calendarFormat: _calendarFormat,
+                              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                              eventLoader: _getEventsForDay,
+                              onDaySelected: (selectedDay, focusedDay) {
+                                setState(() {
+                                  _selectedDay = selectedDay;
+                                  _focusedDay = focusedDay;
+                                });
+                                final isWideScreen = MediaQuery.of(context).size.width > 800;
+                                if (!isWideScreen && _getEventsForDay(selectedDay).isNotEmpty) {
+                                  _tabController.animateTo(1);
+                                }
+                              },
+                              onFormatChanged: (format) {
+                                setState(() {
+                                  _calendarFormat = format;
+                                });
+                              },
+                              calendarStyle: CalendarStyle(
+                                cellPadding: const EdgeInsets.all(1.0),
+                                todayDecoration: BoxDecoration(
+                                  color: Colors.orange,
+                                  shape: BoxShape.circle,
                                 ),
-                                calendarBuilders: CalendarBuilders(
-                                  defaultBuilder: (context, day, focusedDay) {
-                                    return Container(
-                                      margin: const EdgeInsets.all(1.0),
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        '${day.day}',
-                                        style: const TextStyle(fontSize: 12.0),
-                                      ),
-                                    );
-                                  },
-                                  markerBuilder: (context, date, events) {
-                                    if (events.isEmpty) return null;
-                                    final displayEvents = events.take(1).toList();
-                                    return Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: displayEvents.map((event) {
-                                        final cleanTitle = event.title.replaceFirst(RegExp(r'^\d+'), '');
-                                        final title = cleanTitle.isEmpty 
-                                            ? event.title.substring(0, min(5, event.title.length))
-                                            : (cleanTitle.length > 5 
-                                                ? '${cleanTitle.substring(0, 5)}...' 
-                                                : cleanTitle);
-                                        return Padding(
-                                          padding: const EdgeInsets.symmetric(vertical: 1.0),
-                                          child: Text(
-                                            title,
-                                            style: TextStyle(
-                                              fontSize: 9,
-                                              color: Theme.of(context).primaryColor,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            textAlign: TextAlign.center,
+                                selectedDecoration: BoxDecoration(
+                                  color: Colors.blue,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              calendarBuilders: CalendarBuilders(
+                                defaultBuilder: (context, day, focusedDay) {
+                                  return Container(
+                                    margin: const EdgeInsets.all(1.0),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      '${day.day}',
+                                      style: const TextStyle(fontSize: 12.0),
+                                    ),
+                                  );
+                                },
+                                markerBuilder: (context, date, events) {
+                                  if (events.isEmpty) return null;
+                                  final displayEvents = events.take(1).toList();
+                                  return Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: displayEvents.map((event) {
+                                      final cleanTitle = event.title.replaceFirst(RegExp(r'^\d+'), '');
+                                      final title = cleanTitle.isEmpty 
+                                          ? event.title.substring(0, min(5, event.title.length))
+                                          : (cleanTitle.length > 5 
+                                              ? '${cleanTitle.substring(0, 5)}...' 
+                                              : cleanTitle);
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 1.0),
+                                        child: Text(
+                                          title,
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            color: Theme.of(context).primaryColor,
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                        );
-                                      }).toList(),
-                                    );
-                                  },
-                                ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      );
+                                    }).toList(),
+                                  );
+                                },
                               ),
                             ),
                           ),
                         ),
-                        // 活動 Tab
-                        EventsWidget(
-                          selectedDay: _selectedDay ?? _focusedDay,
-                          events: _getEventsForDay(_selectedDay ?? _focusedDay),
-                          isWideScreen: false,
-                          fields: _fields,
-                          labels: _labels,
-                        ),
-                      ],
-                    ),
+                      ),
+                      // 活動 Tab
+                      EventsWidget(
+                        selectedDay: _selectedDay ?? _focusedDay,
+                        events: _getEventsForDay(_selectedDay ?? _focusedDay),
+                        isWideScreen: false,
+                        fields: _fields,
+                        labels: _labels,
+                        focusedEvent: _focusedEvent,
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             );
           }
               },
