@@ -114,12 +114,27 @@ class _CalendarHomePageState extends State<CalendarHomePage> with SingleTickerPr
         fieldDelimiter: ',',  // 字段分隔符
         shouldParseNumbers: false,  // 不自動解析數字
         textDelimiter: '"',  // 文本限定符
+        allowInvalid: true,  // 允許無效字符
       ).convert(csvString);
       
+      // 清理 CSV 數據中的換行和空白
+      final cleanedTable = csvTable.map((row) {
+        return row.map((cell) {
+          if (cell is String) {
+            // 清理每個單元格的值
+            return cell
+                .split(RegExp(r'[\s\n\r]+'))  // 用任何空白或換行符號分割
+                .where((s) => s.isNotEmpty)   // 移除空字串
+                .join('');                    // 重新合併
+          }
+          return cell;
+        }).toList();
+      }).toList();
+      
       // 解析 CSV 表頭和數據行
-      final fields = List<String>.from(csvTable[0]);  // 第一行是字段名
-      final labels = List<String>.from(csvTable[1]);  // 第二行是顯示標籤
-      final dataRows = csvTable.sublist(2);  // 剩餘行是數據
+      final fields = List<String>.from(cleanedTable[0]);  // 第一行是字段名
+      final labels = List<String>.from(cleanedTable[1]);  // 第二行是顯示標籤
+      final dataRows = cleanedTable.sublist(2);  // 剩餘行是數據
 
       // 創建事件映射，按日期組織事件
       Map<DateTime, List<Event>> eventMap = {};

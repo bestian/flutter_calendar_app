@@ -64,41 +64,62 @@ class EventDetailDialog extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     for (int i = 0; i < fields.length; i++)
-                      if (event.data[fields[i]]?.isNotEmpty ?? false)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                labels[i],
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14.0,
-                                ),
-                              ),
-                              const SizedBox(height: 4.0),
-                              if ((fields[i] == 'url' || fields[i] == 'source') && event.data[fields[i]]!.isNotEmpty)
-                                InkWell(
-                                  onTap: () {
-                                    html.window.open(event.data[fields[i]]!, '_blank');
-                                  },
-                                  child: Text(
-                                    event.data[fields[i]]!,
-                                    style: TextStyle(
-                                      color: Theme.of(context).primaryColor,
-                                      decoration: TextDecoration.underline,
+                      Builder(
+                        builder: (context) {
+                          print('處理欄位: ${fields[i]}');
+                          final rawValue = event.data[fields[i]] ?? '';
+                          print('原始欄位值: "$rawValue"');
+                          
+                          // 使用分割再合併的方式清理
+                          String value = rawValue
+                              .split(RegExp(r'[\s\n\r]+'))  // 用任何空白或換行符號分割
+                              .where((s) => s.isNotEmpty)   // 移除空字串
+                              .join('');                    // 重新合併
+                          
+                          print('處理後的欄位值: "$value"');
+                          print('處理後的字元編碼: ${value.codeUnits}');
+                          if (value.isNotEmpty) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    labels[i],
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14.0,
                                     ),
                                   ),
-                                )
-                              else
-                                Text(
-                                  event.data[fields[i]]!,
-                                  style: const TextStyle(fontSize: 14.0),
-                                ),
-                            ],
-                          ),
-                        ),
+                                  const SizedBox(height: 4.0),
+                                  if ((fields[i] == 'url' || fields[i] == 'source') && 
+                                      value.isNotEmpty &&
+                                      value.startsWith('http'))
+                                    InkWell(
+                                      onTap: () {
+                                        print('點擊連結: $value');
+                                        html.window.open(value, '_blank');
+                                      },
+                                      child: Text(
+                                        value,
+                                        style: TextStyle(
+                                          color: Theme.of(context).primaryColor,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    Text(
+                                      value,
+                                      style: const TextStyle(fontSize: 14.0),
+                                    ),
+                                ],
+                              ),
+                            );
+                          }
+                          return Container();
+                        },
+                      ),
                   ],
                 ),
               ),
