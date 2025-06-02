@@ -75,7 +75,8 @@ class BannerWidget extends StatelessWidget {
                   );
                 },
             ),
-            TextSpan(text: '為參考原作，重新設計的版本。'),
+            TextSpan(text: '為參考原作，重新設計的版本。\n'),
+            TextSpan(text: '資料為公開協作，不代表本站立場。'),
           ],
         ),
       ),
