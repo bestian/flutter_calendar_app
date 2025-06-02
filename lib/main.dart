@@ -157,9 +157,9 @@ class _CalendarHomePageState extends State<CalendarHomePage> with SingleTickerPr
           DateTime endDate = DateTime(endParts[0], endParts[1], endParts[2]);
 
           // 調試日誌：打印事件信息
-          print('處理事件: ${data['title']}');
-          print('開始日期: $startDate');
-          print('結束日期: $endDate');
+          // print('處理事件: ${data['title']}');
+          // print('開始日期: $startDate');
+          // print('結束日期: $endDate');
 
           // 檢查日期是否有效
           if (startDate.isAfter(endDate)) {
@@ -169,7 +169,7 @@ class _CalendarHomePageState extends State<CalendarHomePage> with SingleTickerPr
 
           // 檢查日期範圍是否合理（不超過一年）
           if (endDate.difference(startDate).inDays > 365) {
-            print('警告：事件持續時間超過一年，跳過此事件');
+            // print('警告：事件持續時間超過一年，跳過此事件');
             continue;
           }
 
@@ -181,7 +181,7 @@ class _CalendarHomePageState extends State<CalendarHomePage> with SingleTickerPr
           while (currentDate.isBefore(endDate.add(const Duration(days: 1))) && count < maxDays) {
             // 創建標準化的日期（只保留年月日）
             final normalizedDate = DateTime(currentDate.year, currentDate.month, currentDate.day);
-            print('添加事件到日期: $normalizedDate (第 ${count + 1} 天)');
+            // print('添加事件到日期: $normalizedDate (第 ${count + 1} 天)');
 
             // 如果該日期還沒有事件列表，創建一個新的空列表
             eventMap.putIfAbsent(normalizedDate, () => []);
@@ -205,21 +205,21 @@ class _CalendarHomePageState extends State<CalendarHomePage> with SingleTickerPr
             }
           }
 
-          print('事件 ${data['title']} 添加完成，共添加 $count 天');
+          // print('事件 ${data['title']} 添加完成，共添加 $count 天');
         } catch (e) {
           // 打印錯誤信息
-          print('處理事件時出錯: ${data['title']}');
-          print('錯誤詳情: $e');
+          // print('處理事件時出錯: ${data['title']}');
+          // print('錯誤詳情: $e');
           // 跳過無效的日期格式
           continue;
         }
       }
 
       // 調試日誌：打印最終的事件映射
-      print('最終事件映射:');
-      eventMap.forEach((date, events) {
-        print('日期 $date: ${events.map((e) => e.title).join(', ')}');
-      });
+      // print('最終事件映射:');
+      // eventMap.forEach((date, events) {
+      //   print('日期 $date: ${events.map((e) => e.title).join(', ')}');
+      // });
 
       // 更新狀態，觸發 UI 重新構建
       setState(() {
