@@ -1,7 +1,8 @@
 ![hero](https://github.com/user-attachments/assets/21a1dd01-3ad6-4f8d-b83b-6deaf136e432)
 
 # 營隊月曆
-協作式營隊資訊系統
+協作式營隊資訊系統。
+受moogoo原作[大營家](https://github.com/moogoo78/summer-cal)專案之啟發。
 
 ![營隊月曆-流程圖](https://github.com/user-attachments/assets/30f4bdf1-67c0-430a-b6f9-256646d3a08a)
 
