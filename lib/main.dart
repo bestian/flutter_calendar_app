@@ -45,6 +45,7 @@ class _CalendarHomePageState extends State<CalendarHomePage> with SingleTickerPr
   // 添加 TabController
   late TabController _tabController;
   Event? _focusedEvent;  // 添加這行
+  bool _showBanner = false;  // 添加這行，控制 banner 顯示狀態
 
   // Google Sheets 數據源 URL
   final String sourceUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS-ZZ5igNAgYF2aDKkvNqmY1ia5yv2RMDymvD3qvAJzzVPU5oVoFepzDHva8y6BJWPlkrbrJNKmPlK8/pub?gid=1419688078&single=true&output=csv';
@@ -68,6 +69,14 @@ class _CalendarHomePageState extends State<CalendarHomePage> with SingleTickerPr
     _selectedDay = DateTime.now();
     _focusedDay = DateTime.now();
     _loadCSV();
+
+    // 在畫面建立後設定 _showBanner 的初始值
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final isWideScreen = MediaQuery.of(context).size.width > 800 && MediaQuery.of(context).size.height > 600;
+      setState(() {
+        _showBanner = isWideScreen;
+      });
+    });
   }
 
   @override
@@ -333,6 +342,19 @@ class _CalendarHomePageState extends State<CalendarHomePage> with SingleTickerPr
         backgroundColor: Colors.blue,  // 添加背景色
         foregroundColor: Colors.white,  // 添加前景色
         actions: [
+          // 使用說明按鈕
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.info_outline, size: 28),
+              tooltip: '使用說明',
+              onPressed: () {
+                setState(() {
+                  _showBanner = !_showBanner;
+                });
+              },
+            ),
+          ),
           // 搜尋按鈕
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -393,8 +415,8 @@ class _CalendarHomePageState extends State<CalendarHomePage> with SingleTickerPr
       // 主體內容
       body: Column(
         children: [
-          // 頂部橫幅
-          BannerWidget(),
+          // 頂部橫幅 - 根據 _showBanner 狀態決定是否顯示
+          if (_showBanner) BannerWidget(),
           // 主要內容
           Expanded(
             child: LayoutBuilder(
